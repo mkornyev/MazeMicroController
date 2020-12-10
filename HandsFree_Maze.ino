@@ -3,7 +3,7 @@
 // MODES
 bool DEBUG_COORDINATES = false; // Print output (coords computed first)
 bool DEBUG_ANGLES = false; // (angles computed from coords)
-bool LISTEN_INCOMING_MESSAGES = false; // Accept remote input? 
+bool LISTEN_INCOMING_MESSAGES = true; // Accept remote input? 
 
 // CONSTANTS
 const int X_SERVO_PIN = 6;
@@ -58,11 +58,16 @@ void loop()
 {
   if(LISTEN_INCOMING_MESSAGES) { // If listening for messages
     while(Serial.available()) {
-      float lVal = Serial.parseFloat(); Serial.find(','); // Parse a value in range [-1.0, 1.0]
-      float rVal = Serial.parseFloat(); Serial.find('\n');
+      float lVal = Serial.parseInt(); Serial.find(','); // Parse a value in range [-100, 100]
+      float rVal = Serial.parseInt(); Serial.find('\n');
 
-      lAngle= fmap(lVal, -1.0, 1.0, -20, 20);  // Perform a float conversion 
-      rAngle = fmap(rVal, -1.0, 1.0, -20, 20);
+      float rawLAngle = fmap(lVal, -100.0, 100.0, -20, 20);  // Perform a float conversion 
+      float rawRAngle = fmap(rVal, -100.0, 100.0, -20, 20);
+
+      lAngle = getSmoothedValue(lAngle, rawLAngle, 0.5);   // TUNE: .5 = move device at half the indicated rate 
+      rAngle = getSmoothedValue(rAngle, rawRAngle, 0.5); // TUNE: 0.5
+
+      break;
     }
   } else {
     // Get raw distances
